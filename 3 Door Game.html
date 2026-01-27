@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monty Hall: Alani vs Wilder</title>
+    <style>
+        body { font-family: 'Verdana', sans-serif; text-align: center; background-color: #f0f8ff; margin: 0; padding: 20px; }
+        
+        h1 { color: #333; margin-bottom: 5px; }
+        
+        /* Scoreboard Styling */
+        .scoreboard {
+            display: flex; justify-content: center; gap: 40px;
+            background: white; padding: 15px; margin: 20px auto;
+            border-radius: 15px; width: fit-content;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .player-score { font-size: 20px; font-weight: bold; color: #555; padding: 10px 20px; border-radius: 8px; }
+        .active-turn { background-color: #e3f2fd; border: 2px solid #2196F3; color: #0d47a1; transform: scale(1.1); transition: all 0.3s; }
+        
+        .game-container { margin-top: 30px; }
+        .doors-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+        
+        .door-box {
+            width: 140px; height: 200px;
+            position: relative; cursor: pointer;
+            perspective: 1000px;
+        }
+        
+        .door {
+            width: 100%; height: 100%;
+            background-color: #ff6f61;
+            border: 4px solid #cc4a3b; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 40px; color: white; font-weight: bold;
+            position: absolute; top: 0; left: 0;
+            transition: transform 0.6s; transform-origin: left;
+            z-index: 2; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .door.open { transform: rotateY(-110deg); }
+        
+        .prize {
+            width: 100%; height: 100%;
+            background-color: #ddd; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 50px; position: absolute; top: 0; left: 0; z-index: 1;
+        }
+
+        #message { font-size: 22px; margin: 25px; font-weight: bold; min-height: 30px; color: #333; }
+        
+        .btn {
+            padding: 12px 24px; font-size: 18px; cursor: pointer;
+            border: none; border-radius: 50px; margin: 5px;
+            display: none; color: white; font-weight: bold;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2); transition: transform 0.1s;
+        }
+        .btn:active { transform: translateY(4px); box-shadow: none; }
+        
+        #btn-stay { background-color: #6c757d; }
+        #btn-switch { background-color: #28a745; }
+        #btn-next { background-color: #007bff; display: inline-block; }
+
+    </style>
+</head>
+<body>
+
+    <h1>Monty Hall Challenge</h1>
+    
+    <div class="scoreboard">
+        <div id="score-Alani" class="player-score active-turn">Alani: 0</div>
+        <div id="score-Wilder" class="player-score">Wilder: 0</div>
+    </div>
+
+    <div id="message">Alani, pick a door to start!</div>
+
+    <div class="game-container">
+        <div class="doors-container">
+            <div class="door-box" onclick="selectDoor(0)">
+                <div class="prize" id="prize-0">🚗</div>
+                <div class="door" id="door-0">1</div>
+            </div>
+            <div class="door-box" onclick="selectDoor(1)">
+                <div class="prize" id="prize-1">🐐</div>
+                <div class="door" id="door-1">2</div>
+            </div>
+            <div class="door-box" onclick="selectDoor(2)">
+                <div class="prize" id="prize-2">🐐</div>
+                <div class="door" id="door-2">3</div>
+            </div>
+        </div>
+
+        <br>
+        <button id="btn-stay" class="btn" onclick="makeDecision(false)">Stay with Door <span id="stay-num"></span></button>
+        <button id="btn-switch" class="btn" onclick="makeDecision(true)">Switch to Door <span id="switch-num"></span></button>
+        <br><br>
+        <button id="btn-next" class="btn" onclick="nextTurn()" style="display:none">Next Player</button>
+    </div>
+
+    <script>
+        let carLocation, userChoice, montyDoor;
+        let gameState = 'PICK'; // PICK, DECIDE, RESULT
+        
+        // Player State
+        const players = ['Alani', 'Wilder'];
+        let currentPlayerIndex = 0; // 0 for Alani, 1 for Wilder
+        let scores = { 'Alani': 0, 'Wilder': 0 };
+
+        function initRound() {
+            gameState = 'PICK';
+            userChoice = null; montyDoor = null;
+            let currentPlayerName = players[currentPlayerIndex];
+
+            // Randomly place car
+            carLocation = Math.floor(Math.random() * 3);
+            
+            // Reset UI
+            document.body.style.backgroundColor = "#f0f8ff";
+            document.getElementById('message').innerText = `${currentPlayerName}, pick a door to start!`;
+            document.getElementById('btn-stay').style.display = 'none';
+            document.getElementById('btn-switch').style.display = 'none';
+            document.getElementById('btn-next').style.display = 'none';
+
+            // Highlight active player
+            updateScoreboardUI();
+
+            // Close doors
+            for(let i=0; i<3; i++) {
+                document.getElementById(`door-${i}`).classList.remove('open');
+                // Hide prizes again (reset text to blank or ensure hidden)
+                document.getElementById(`prize-${i}`).innerText = (i === carLocation) ? "🚗" : "🐐";
+            }
+        }
+
+        function updateScoreboardUI() {
+            // Update text
+            document.getElementById('score-Alani').innerText = `Alani: ${scores['Alani']}`;
+            document.getElementById('score-Wilder').innerText = `Wilder: ${scores['Wilder']}`;
+
+            // Highlight current turn
+            if (currentPlayerIndex === 0) {
+                document.getElementById('score-Alani').classList.add('active-turn');
+                document.getElementById('score-Wilder').classList.remove('active-turn');
+            } else {
+                document.getElementById('score-Alani').classList.remove('active-turn');
+                document.getElementById('score-Wilder').classList.add('active-turn');
+            }
+        }
+
+        function selectDoor(doorIndex) {
+            if (gameState !== 'PICK') return;
+
+            userChoice = doorIndex;
+            gameState = 'DECIDE';
+            
+            // Monty opens a goat door
+            let availableDoors = [0, 1, 2].filter(d => d !== carLocation && d !== userChoice);
+            montyDoor = availableDoors[Math.floor(Math.random() * availableDoors.length)];
+            
+            document.getElementById(`door-${montyDoor}`).classList.add('open');
+            
+            let switchDoor = [0, 1, 2].find(d => d !== userChoice && d !== montyDoor);
+            document.getElementById('message').innerText = `Monty opened Door ${montyDoor+1}! Do you want to Switch or Stay?`;
+            
+            document.getElementById('stay-num').innerText = userChoice + 1;
+            document.getElementById('switch-num').innerText = switchDoor + 1;
+            
+            document.getElementById('btn-stay').style.display = 'inline-block';
+            document.getElementById('btn-switch').style.display = 'inline-block';
+        }
+
+        function makeDecision(doSwitch) {
+            if (gameState !== 'DECIDE') return;
+            
+            let finalChoice = userChoice;
+            if (doSwitch) {
+                finalChoice = [0, 1, 2].find(d => d !== userChoice && d !== montyDoor);
+            }
+            
+            // Open selected door
+            document.getElementById(`door-${finalChoice}`).classList.add('open');
+            
+            let currentPlayerName = players[currentPlayerIndex];
+
+            // Check Win
+            if (finalChoice === carLocation) {
+                scores[currentPlayerName]++; // Add point
+                document.getElementById('message').innerText = `YES! ${currentPlayerName} found the car! 🚗`;
+                document.body.style.backgroundColor = "#d4edda"; // Green tint
+            } else {
+                document.getElementById('message').innerText = `Oh no! It's a goat. 🐐`;
+                document.body.style.backgroundColor = "#f8d7da"; // Red tint
+            }
+            
+            updateScoreboardUI();
+            
+            // Reveal Car if missed
+            if (finalChoice !== carLocation) {
+                document.getElementById(`door-${carLocation}`).classList.add('open');
+            }
+
+            document.getElementById('btn-stay').style.display = 'none';
+            document.getElementById('btn-switch').style.display = 'none';
+            
+            // Setup Next Turn Button
+            let nextPlayerName = players[(currentPlayerIndex + 1) % 2];
+            document.getElementById('btn-next').innerText = `Next Turn: ${nextPlayerName}`;
+            document.getElementById('btn-next').style.display = 'inline-block';
+            
+            gameState = 'RESULT';
+        }
+
+        function nextTurn() {
+            // Swap player index (0 -> 1, 1 -> 0)
+            currentPlayerIndex = (currentPlayerIndex + 1) % 2;
+            initRound();
+        }
+
+        // Start game
+        initRound();
+    </script>
+</body>
+</html>
