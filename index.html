@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papa Pooh's Game Room</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background-color: #f7f9fc; color: #333; margin: 0; padding: 20px; }
+        .header { background: #2ea44f; color: white; padding: 20px; border-radius: 15px; margin-bottom: 30px; }
+        .container { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .game-card { 
+            background: white; border: 2px solid #e1e4e8; border-radius: 20px; 
+            padding: 25px; width: 280px; text-decoration: none; color: inherit; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s ease;
+        }
+        .game-card:hover { transform: translateY(-10px); border-color: #2ea44f; box-shadow: 0 10px 15px rgba(0,0,0,0.1); }
+        .game-card h2 { color: #2ea44f; font-size: 24px; margin-bottom: 10px; }
+        .icon { font-size: 50px; margin-bottom: 10px; }
+        p { font-size: 16px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 Papa Pooh's Game Room</h1>
+        <p>Created with love for Alani & Wilder</p>
+    </div>
+
+    <div class="container">
+        <a href="3-doors/" class="game-card">
+            <div class="icon">🚪</div>
+            <h2>3 Door Game</h2>
+            <p>Will you find the prize or the goat? Switch or stay!</p>
+        </a>
+
+        <a href="geography/" class="game-card">
+            <div class="icon">🌍</div>
+            <h2>World Geography</h2>
+            <p>Test your knowledge of countries and capitals!</p>
+        </a>
+    </div>
+</body>
+</html>
