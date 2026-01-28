@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Explorer - Papa Pooh Edition</title>
+    <title>Solar Explorer - Static Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #020617; overflow: hidden; font-family: sans-serif; color: white; }
-        #game-container { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle at 0% 50%, #1e1b4b 0%, #020617 100%); border: 0px solid #3b82f6; transition: all 0.1s; }
-        #space-canvas { width: 100%; height: 100%; cursor: grab; }
-        .planet-group { cursor: pointer; transition: transform 0.3s; }
-        .planet-group:hover { transform: scale(1.15); }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle at 0% 50%, #1e1b4b 0%, #020617 100%); border: 0px solid #3b82f6; }
+        #space-canvas { width: 100%; height: 100%; }
+        .planet-group { cursor: pointer; transition: filter 0.3s; }
+        .planet-group:hover { filter: brightness(1.3); }
         .hud { position: absolute; z-index: 10; pointer-events: none; }
         .hud-content { pointer-events: auto; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(10px); border: 2px solid #3b82f6; border-radius: 1.5rem; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-        .pulse-button { animation: pulse 2s infinite; cursor: pointer; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -23,8 +21,8 @@
     <div id="game-container">
         <div id="start-screen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
             <h1 class="text-7xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-400 to-red-500 uppercase tracking-tighter">Solar Explorer</h1>
-            <p id="loading-voice-text" class="text-2xl mb-10 text-blue-300 animate-pulse font-bold">Warp drive engaged...</p>
-            <button id="start-btn" class="hidden bg-blue-600 hover:bg-blue-500 text-white font-black py-6 px-16 rounded-full text-4xl shadow-2xl transition-all hover:scale-110">BEGIN MISSION</button>
+            <p id="loading-voice-text" class="text-2xl mb-10 text-blue-300 font-bold">Planets Locked in Orbit...</p>
+            <button id="start-btn" class="hidden bg-blue-600 hover:bg-blue-500 text-white font-black py-6 px-16 rounded-full text-4xl shadow-2xl transition-all hover:scale-110">START MISSION</button>
         </div>
 
         <div id="winner-screen" class="hidden fixed inset-0 z-50 bg-blue-900/95 flex flex-col items-center justify-center p-6 text-center">
@@ -50,7 +48,7 @@
         </div>
 
         <div class="hud top-1/2 left-4 -translate-y-1/2">
-            <button onclick="papaEncourage()" class="hud-content pulse-button p-5 flex flex-col items-center gap-3 border-blue-400 border-4 bg-slate-900 shadow-2xl">
+            <button onclick="papaEncourage()" class="hud-content p-5 flex flex-col items-center gap-3 border-blue-400 border-4 bg-slate-900 shadow-2xl">
                 <span class="text-6xl">👴</span>
                 <p class="text-blue-400 font-black text-sm uppercase tracking-widest">Ask Papa!</p>
             </button>
@@ -68,22 +66,22 @@
         let voiceReady = false;
 
         const worlds = [
-            { name: "The Sun", x: 0, y: 500, r: 240, grad: ["#fde047", "#ea580c"], fact: "The Sun is a giant star at the center of our family's solar system!" },
-            { name: "Mercury", x: 350, y: 500, r: 25, grad: ["#94a3b8", "#475569"], fact: "Mercury is small and very close to the Sun. It gets super hot!" },
-            { name: "Venus", x: 450, y: 350, r: 40, grad: ["#fef08a", "#ca8a04"], fact: "Venus is covered in hot yellow clouds!" },
-            { name: "Earth", x: 550, y: 650, r: 45, grad: ["#60a5fa", "#1d4ed8"], fact: "Earth is our home! It's the only planet with water and life!" },
-            { name: "The Moon", x: 615, y: 610, r: 18, grad: ["#e2e8f0", "#94a3b8"], fact: "The Moon orbits Earth and has millions of rock craters!" },
-            { name: "Mars", x: 750, y: 400, r: 35, grad: ["#f87171", "#991b1b"], fact: "Mars is the Red Planet and has a giant volcano!" },
-            { name: "Jupiter", x: 950, y: 600, r: 85, grad: ["#fbbf24", "#92400e"], fact: "Jupiter is so big, all other planets could fit inside it!" },
-            { name: "Saturn", x: 1200, y: 300, r: 95, grad: ["#fde68a", "#b45309"], fact: "Saturn has beautiful rings made of ice and rock!", rings: true },
-            { name: "Black Hole", x: 1450, y: 750, r: 60, grad: ["#000000", "#1e1b4b"], fact: "A Black Hole is so strong even light can't escape!", glow: "purple" }
+            { name: "The Sun", x: 0, y: 500, r: 240, grad: ["#fde047", "#ea580c"], fact: "The Sun is the giant star at the center of everything!" },
+            { name: "Mercury", x: 350, y: 500, r: 25, grad: ["#94a3b8", "#475569"], fact: "Mercury is small and very close to the Sun!" },
+            { name: "Venus", x: 450, y: 350, r: 40, grad: ["#fef08a", "#ca8a04"], fact: "Venus is covered in yellow clouds!" },
+            { name: "Earth", x: 550, y: 650, r: 45, grad: ["#60a5fa", "#1d4ed8"], fact: "Earth is our beautiful home!" },
+            { name: "The Moon", x: 615, y: 610, r: 18, grad: ["#e2e8f0", "#94a3b8"], fact: "The Moon orbits our Earth!" },
+            { name: "Mars", x: 750, y: 400, r: 35, grad: ["#f87171", "#991b1b"], fact: "Mars is the Red Planet!" },
+            { name: "Jupiter", x: 950, y: 600, r: 85, grad: ["#fbbf24", "#92400e"], fact: "Jupiter is the biggest planet!" },
+            { name: "Saturn", x: 1200, y: 300, r: 95, grad: ["#fde68a", "#b45309"], fact: "Saturn has ice rings!", rings: true },
+            { name: "Black Hole", x: 1450, y: 750, r: 60, grad: ["#000000", "#1e1b4b"], fact: "Nothing escapes a Black Hole!", glow: "purple" }
         ];
 
         function initVoices() {
             const voices = window.speechSynthesis.getVoices();
             if (voices.length > 0 && !voiceReady) {
                 preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha'));
-                document.getElementById('loading-voice-text').innerText = "All systems go! Ready Alani and Wilder?";
+                document.getElementById('loading-voice-text').innerText = "All planets anchored. Ready grandkids?";
                 document.getElementById('start-btn').classList.remove('hidden');
                 voiceReady = true;
             }
@@ -105,7 +103,6 @@
         const svg = d3.select("#space-canvas");
         const defs = svg.append("defs");
         
-        // DRAW PLANET GRADIENTS
         worlds.forEach((d, i) => {
             const grad = defs.append("radialGradient").attr("id", "grad-" + i);
             grad.append("stop").attr("offset", "0%").attr("stop-color", d.grad[0]);
@@ -113,7 +110,6 @@
         });
 
         const g = svg.append("g");
-        svg.call(d3.zoom().scaleExtent([0.3, 3]).on("zoom", (e) => g.attr("transform", e.transform)));
 
         // STARS
         for(let i=0; i<450; i++) {
@@ -128,22 +124,29 @@
 
         function drawWorlds() {
             worlds.forEach((d, i) => {
-                const group = g.append("g").attr("class", "planet-group").on("click", () => handleWorldClick(d));
+                const group = g.append("g").attr("class", "planet-group")
+                    .attr("transform", `translate(${d.x},${d.y})`)
+                    .on("click", () => handleWorldClick(d));
                 
                 if(d.rings) {
-                    group.append("ellipse").attr("cx", d.x).attr("cy", d.y).attr("rx", d.r * 1.8).attr("ry", d.r * 0.4).attr("fill", "none").attr("stroke", "rgba(253, 230, 138, 0.4)").attr("stroke-width", 15);
+                    group.append("ellipse").attr("cx", 0).attr("cy", 0).attr("rx", d.r * 1.8).attr("ry", d.r * 0.4).attr("fill", "none").attr("stroke", "rgba(253, 230, 138, 0.4)").attr("stroke-width", 15);
                 }
 
-                group.append("circle").attr("cx", d.x).attr("cy", d.y).attr("r", d.r).attr("fill", `url(#grad-${i})`)
-                    .style("filter", d.glow ? `drop-shadow(0 0 15px ${d.glow})` : "drop-shadow(0 0 5px rgba(255,255,255,0.2))");
+                group.append("circle").attr("cx", 0).attr("cy", 0).attr("r", d.r).attr("fill", `url(#grad-${i})`)
+                    .style("filter", d.glow ? `drop-shadow(0 0 15px ${d.glow})` : "none");
             });
         }
         drawWorlds();
 
+        // NO MOVEMENT PHYSICS IN THIS SECTION AT ALL
         svg.on("mousemove", function(event) {
             if (!targetWorld) return;
             const [mx, my] = d3.pointer(event, g.node());
-            const dist = Math.sqrt((mx - targetWorld.x)**2 + (my - targetWorld.y)**2);
+            const dx = targetWorld.x - mx;
+            const dy = targetWorld.y - my;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Only the border glow changes, planets stay frozen
             const intensity = Math.max(0, 10 - (dist / 180));
             const container = document.getElementById("game-container");
             container.style.borderWidth = (intensity * 4) + "px";
@@ -152,7 +155,7 @@
 
         document.getElementById('start-btn').onclick = () => {
             document.getElementById('start-screen').classList.add('hidden');
-            speak("Welcome explorers! Alani and Wilder, find the worlds orbiting the Sun! Alani first!", nextRound);
+            speak("Mission start! Alani and Wilder, find the planets! They won't move an inch!", nextRound);
         };
 
         function nextRound() {
@@ -174,7 +177,7 @@
                     speak("Now it's " + currentPlayer + "'s turn", nextRound);
                 });
             } else {
-                speak("Missed turn! That was " + d.name, () => {
+                speak("Missed! Turn passes!", () => {
                     currentPlayer = (currentPlayer === 'Alani' ? 'Wilder' : 'Alani');
                     speak("Now it's " + currentPlayer + "'s turn", nextRound);
                 });
@@ -182,14 +185,14 @@
         }
 
         function papaEncourage() {
-            speak("Papa Pooh says: Watch the blue glow! It's brightest when you're right on top of the planet!");
+            speak("Papa Pooh says: Use the blue glow. The planets are standing still, so just follow the light!");
         }
 
         function endGame() {
             const winner = (scores.Alani >= 1000 ? 'Alani' : 'Wilder');
             document.getElementById('winner-text').innerText = winner + " Wins!";
             document.getElementById('winner-screen').classList.remove('hidden');
-            speak("Hooray! Congratulations " + winner + "! You found everything in the galaxy! Papa Pooh is so proud!");
+            speak("Congratulations " + winner + "! You are the Solar Master! Papa Pooh is proud!");
         }
     </script>
 </body>
