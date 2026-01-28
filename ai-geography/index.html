@@ -61,7 +61,6 @@
     </div>
 
     <script>
-        // --- DATA ---
         const players = ['Alani', 'Wilder'];
         let currentPlayer = 'Alani';
         let scores = { Alani: 0, Wilder: 0 };
@@ -73,48 +72,55 @@
             "Canada": "Canada has more lakes than all other countries combined! It's basically a giant water park!",
             "Brazil": "Brazil has more types of monkeys than anywhere else! Ooh ooh aah aah!",
             "Australia": "Australia is wider than the moon! If you walked across it, you might bump into space!",
-            "Italy": "Italy has a fountain that pours free red wine. Papa Pooh would love to visit!",
+            "Italy": "Italy has a fountain that pours free red wine for everyone. Papa Pooh would love to visit!",
             "Japan": "Japan has square watermelons so they don't roll off the table!",
             "France": "France is the most visited place on Earth. Everyone wants a croissant!",
             "United States of America": "People in America eat 100 acres of pizza every single day. That's a lot of pepperoni!",
             "Egypt": "The Great Pyramid of Giza was the tallest thing on Earth for 3,800 years!",
             "Russia": "Russia is so big it has 11 different time zones!",
             "China": "China's Great Wall is long enough to wrap around the Earth half-way!",
-            "Portugal": "Portugal is the oldest country in Europe and has the same borders since 1139!"
+            "Portugal": "Portugal is the oldest country in Europe! It also has the world's oldest bookstore!",
+            "Switzerland": "In Switzerland, it is illegal to own just one guinea pig because they get lonely. You must have two!",
+            "Mexico": "The Great Pyramid of the world isn't in Egypt—it's actually in Mexico, hidden under a hill!",
+            "United Kingdom": "In the UK, it's illegal to handle a salmon in suspicious circumstances. Don't be sneaky with your fish!",
+            "Norway": "Norway once knighted a penguin named Nils Olav. He is a very fancy bird!",
+            "Germany": "Germany has over 1,000 kinds of sausages. That's a lot of hot dogs!",
+            "Spain": "Spain has a festival where people throw thousands of tomatoes at each other just for fun!",
+            "India": "India has a floating post office that sits on a boat in a lake!",
+            "Thailand": "In Thailand, it is illegal to step on money because it has the King's face on it!"
         };
+
+        const genericJokes = [
+            "This country is so cool, even the polar bears want to live there!",
+            "I heard the birds here sing in three different languages!",
+            "This place is famous for having the world's most polite squirrels!",
+            "If you visited this country, you might accidentally become a professional explorer!",
+            "I bet the ice cream here never melts because the country is just too cool!"
+        ];
 
         const continentsMap = {
             "Canada": "North America", "United States of America": "North America", "Mexico": "North America",
             "Brazil": "South America", "Argentina": "South America", "Chile": "South America",
-            "France": "Europe", "Italy": "Europe", "Germany": "Europe", "Spain": "Europe", "United Kingdom": "Europe", "Portugal": "Europe",
+            "France": "Europe", "Italy": "Europe", "Germany": "Europe", "Spain": "Europe", "United Kingdom": "Europe", "Portugal": "Europe", "Switzerland": "Europe", "Norway": "Europe",
             "China": "Asia", "India": "Asia", "Japan": "Asia", "Thailand": "Asia", "Russia": "Asia",
             "Egypt": "Africa", "South Africa": "Africa", "Nigeria": "Africa", "Kenya": "Africa",
             "Australia": "Oceania", "New Zealand": "Oceania"
         };
 
-        // --- UPDATED FRIENDLY VOICE ENGINE ---
         function speak(text, onEnd) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             const voices = window.speechSynthesis.getVoices();
-            
-            // Look for a friendly female voice
-            const preferredVoice = voices.find(v => 
-                v.name.includes('Female') || v.name.includes('Google US English') || 
-                v.name.includes('Samantha') || v.name.includes('Zira')
-            );
-
+            const preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Zira'));
             if (preferredVoice) utterance.voice = preferredVoice;
-            utterance.pitch = 1.2; // Cheerful pitch
-            utterance.rate = 0.9;  // Clear speed
+            utterance.pitch = 1.2;
+            utterance.rate = 0.9;
             utterance.onend = onEnd;
             window.speechSynthesis.speak(utterance);
         }
 
-        // Initialize voices for Chrome
         window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 
-        // --- MAP ENGINE (D3) ---
         const svg = d3.select("#map-svg");
         const g = svg.append("g");
         const projection = d3.geoMercator().scale(window.innerWidth / 6.5).translate([window.innerWidth / 2, window.innerHeight / 1.5]);
@@ -141,10 +147,9 @@
                 });
         });
 
-        // --- GAME LOGIC ---
         document.getElementById('start-btn').onclick = () => {
             document.getElementById('start-screen').classList.add('hidden');
-            speak("Hi Alani and Wilder! Let's play World Explorer! First to 1000 points wins. Alani, you start!", nextRound);
+            speak("Hi Alani and Wilder! Let's explore the world together. First to 1000 points is the winner. Alani, find the first country!", nextRound);
         };
 
         function nextRound() {
@@ -152,19 +157,16 @@
             const list = Object.keys(continentsMap);
             targetCountry = list[Math.floor(Math.random() * list.length)];
             currentContinent = continentsMap[targetCountry];
-            
             document.getElementById('target-country').innerText = targetCountry;
             document.getElementById('turn-label').innerText = currentPlayer + "'s Turn";
             document.getElementById('fact-container').style.opacity = "0";
             document.getElementById('box-Alani').style.opacity = (currentPlayer === 'Alani' ? "1" : "0.3");
             document.getElementById('box-Wilder').style.opacity = (currentPlayer === 'Wilder' ? "1" : "0.3");
-            
             const hint = document.getElementById('hint-text');
             if (currentPlayer === 'Wilder') {
                 hint.innerText = "💡 Hint: It's in " + currentContinent;
                 hint.classList.remove('hidden');
             } else { hint.classList.add('hidden'); }
-
             g.selectAll("path").transition().duration(500).style("fill", d => {
                 const name = d.properties.ADMIN || d.properties.name || d.properties.name_en;
                 if (currentPlayer === 'Wilder' && continentsMap[name] === currentContinent) return "#0ea5e9";
@@ -176,26 +178,25 @@
             if (name === targetCountry) {
                 scores[currentPlayer] += 200;
                 document.getElementById('score-' + currentPlayer).innerText = scores[currentPlayer];
-                const fact = funnyFacts[name] || "This country is amazing and full of surprises!";
+                const fact = funnyFacts[name] || genericJokes[Math.floor(Math.random() * genericJokes.length)];
                 document.getElementById('fact-text').innerText = fact;
                 document.getElementById('fact-container').style.opacity = "1";
-                speak("Correct! " + fact, () => {
-                    currentPlayer = currentPlayer === 'Alani' ? 'Wilder' : 'Alani';
-                    speak("It is now " + currentPlayer + "'s turn", nextRound);
-                });
+                speak("You got it! " + fact, () => { switchPlayer(); });
             } else {
-                speak("Not quite! That was " + name + ". Next turn!", () => {
-                    currentPlayer = currentPlayer === 'Alani' ? 'Wilder' : 'Alani';
-                    nextRound();
-                });
+                speak("Not that one! That was " + name + ". Let's try another turn!", () => { switchPlayer(); });
             }
+        }
+
+        function switchPlayer() {
+            currentPlayer = currentPlayer === 'Alani' ? 'Wilder' : 'Alani';
+            speak("It is now " + currentPlayer + "'s turn.", nextRound);
         }
 
         function endGame() {
             const winner = scores.Alani >= 1000 ? 'Alani' : 'Wilder';
             document.getElementById('winner-text').innerText = winner + " Wins!";
             document.getElementById('winner-screen').classList.remove('hidden');
-            speak("Congratulations " + winner + "! You are the champion of the world!");
+            speak("We have a champion! Congratulations " + winner + "! You are the greatest explorer in the world!");
         }
     </script>
 </body>
