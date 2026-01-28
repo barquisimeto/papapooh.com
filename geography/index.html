@@ -1,0 +1,153 @@
+<html>
+<head>
+	<title>World Map Game</title>
+	<style>
+		#map {
+			display: block;
+			margin: 0 auto;
+		}
+		#france {
+                         position: absolute;
+                         top: 20px;
+                         left: 20px;
+                         font-size: 24px;
+                         color: white;
+                         text-shadow: 1px 1px black;
+		}
+		#japan {
+                         position: absolute;
+                         top: 50px;
+                         left: 20px;
+                         font-size: 24px;
+                         color: white;
+                         text-shadow: 1px 1px black;
+		}
+		#usa {
+                         position: absolute;
+                         top: 80px;
+                         left: 20px;
+                         font-size: 24px;
+                         color: white;
+                         text-shadow: 1px 1px black;
+		}
+		#portugal {
+                         position: absolute;
+                         top: 110px;
+                         left: 20px;
+                         font-size: 24px;
+                         color: white;
+                         text-shadow: 1px 1px black;
+		}
+		#countries {
+			text-align: center;
+			margin-top: 20px;
+		}
+		#countries p {
+			display: inline-block;
+			margin: 0 20px;
+			cursor: pointer;
+			font-weight: bold;
+			color: #333;
+		}
+		#selected {
+			margin-top: 20px;
+			text-align: center;
+			font-size: 24px;
+			font-weight: bold;
+			color: #333;
+		}
+		#check {
+			display: inline-block;
+			margin-left: 10px;
+			width: 20px;
+			height: 20px;
+			border: 2px solid #333;
+			border-radius: 50%;
+			background-color: #fff;
+			vertical-align: middle;
+		}
+		#check.selected {
+			background-color: #333;
+		}
+		#message {
+			margin-top: 20px;
+			text-align: center;
+			font-size: 24px;
+			font-weight: bold;
+			color: red;
+		}
+		#position {
+			margin-top: 20px;
+			text-align: center;
+			font-size: 24px;
+			font-weight: bold;
+			color: #333;
+		}
+	</style>
+	<script>
+		function selectCountry(country) {
+			var selected = document.getElementById("selected");
+			selected.innerHTML = country.charAt(0).toUpperCase() + country.slice(1);
+			var check = document.getElementById("check");
+			check.classList.remove("selected");
+			document.getElementById(country).appendChild(check);
+		}
+
+	function checkAnswer(event) {
+		var x = event.clientX;
+		var y = event.clientY;
+		var selected = document.getElementById("selected").innerHTML.toLowerCase();
+		var message = document.getElementById("message");
+		var position = document.getElementById("position");
+		var answer = "";
+
+                if (x < 350 || y > 741)
+                        answer = ""
+		else
+		{	
+		if (selected === "france" && x > 907 && x < 946 && y > 276 && y < 312) {
+			answer = "Right!";
+		} else if (selected === "japan" && x > 1353 && x < 1420 && y > 305 && y < 360) {
+			answer = "Right!";
+		} else if (selected === "usa" && x > 509 && x < 695 && y > 285 && y < 384) {
+			answer = "Right!";
+		} else if (selected === "portugal" && x > 888 && x < 902 && y > 317 && y < 339) {
+			answer = "Right!";
+		} else {
+		answer = "Wrong!";
+		}
+	}
+
+	position.innerHTML = "Mouse position: (" + x + ", " + y + ")";
+	
+	var answerDiv = document.createElement("div");
+	answerDiv.innerHTML = answer;
+	answerDiv.style.position = "absolute";
+	answerDiv.style.left = x + "px";
+	answerDiv.style.top = y + "px";
+	answerDiv.style.fontSize = "50px";
+	answerDiv.style.fontWeight = "bold";
+	answerDiv.style.color = (answer === "Right!") ? "green" : "red";
+	document.body.appendChild(answerDiv);
+
+	setTimeout(function() {
+		answerDiv.parentNode.removeChild(answerDiv);
+	}, 1500);
+}
+
+</script>
+</head>
+<body onclick="checkAnswer(event)">
+	<img id="map" src="https://geology.com/world/world-map.gif" alt="World Map">
+	<div id="countries">
+		<p id="france" onclick="selectCountry('france')">France</p>
+		<p id="japan" onclick="selectCountry('japan')">Japan</p>
+		<p id="usa" onclick="selectCountry('usa')">USA</p>
+		<p id="portugal" onclick="selectCountry('portugal')">Portugal</p>
+	</div>
+	<div id="selected"></div>
+	<div id="check"></div>
+	<div id="message"></div>
+	<div id="position"></div>
+</body>
+</html>
