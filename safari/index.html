@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Safari - Papa Pooh Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #064e3b; overflow: hidden; font-family: sans-serif; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: #065f46; border: 0px solid #fbbf24; transition: border-width 0.1s, box-shadow 0.1s; }
+        #map-svg { width: 100%; height: 100%; cursor: grab; }
+        #map-svg:active { cursor: grabbing; }
+        .country-path { stroke: #064e3b; stroke-width: 0.5px; fill: #064e3b; pointer-events: none; }
+        .landmark-point { cursor: pointer; transition: all 0.3s; fill: #fbbf24; stroke: #fff; stroke-width: 2px; }
+        .landmark-point:hover { fill: #fcd34d; r: 14; }
+        .hud { position: absolute; z-index: 10; pointer-events: none; }
+        .hud-content { pointer-events: auto; background: rgba(6, 78, 59, 0.95); backdrop-filter: blur(10px); border: 2px solid #10b981; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7); }
+        #tooltip { position: absolute; opacity: 0; pointer-events: none; background: #fbbf24; color: #064e3b; padding: 5px 12px; border-radius: 8px; font-size: 16px; font-weight: 900; z-index: 100; }
+        .pulse-button { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+        #target-img { width: 100%; height: 150px; object-fit: cover; border-radius: 1rem; margin-top: 1rem; border: 2px solid #10b981; }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="start-screen" class="fixed inset-0 z-50 bg-emerald-950 flex flex-col items-center justify-center p-6 text-center">
+            <h1 class="text-7xl font-black mb-6 text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-yellow-400 uppercase tracking-tighter">ANIMAL SAFARI</h1>
+            <p id="loading-voice-text" class="text-2xl mb-10 text-emerald-200 animate-pulse font-bold">Warming up the safari engines...</p>
+            <button id="start-btn" class="hidden bg-emerald-500 hover:bg-emerald-600 text-white font-black py-6 px-16 rounded-full text-4xl shadow-2xl transition-all hover:scale-110">START SAFARI</button>
+        </div>
+
+        <div id="winner-screen" class="hidden fixed inset-0 z-50 bg-emerald-900/98 flex flex-col items-center justify-center p-6 text-center">
+            <div class="text-9xl mb-6">🦁</div>
+            <h1 id="winner-text" class="text-8xl font-black text-white uppercase"></h1>
+            <button onclick="location.reload()" class="mt-10 bg-white text-emerald-900 font-black py-4 px-12 rounded-full text-3xl shadow-2xl">PLAY AGAIN</button>
+        </div>
+
+        <div class="hud top-4 left-4">
+            <div class="hud-content p-4 flex gap-10">
+                <div id="box-Alani" class="text-center transition-all"><p class="text-xs font-black text-emerald-300 uppercase">ALANI 🎾</p><p id="score-Alani" class="text-5xl font-mono font-bold text-white">0</p></div>
+                <div class="w-px bg-emerald-800 h-16"></div>
+                <div id="box-Wilder" class="text-center opacity-50 transition-all"><p class="text-xs font-black text-cyan-300 uppercase">WILDER 🎮</p><p id="score-Wilder" class="text-5xl font-mono font-bold text-white">0</p></div>
+            </div>
+        </div>
+
+        <div class="hud top-4 right-4 text-right">
+            <div class="hud-content p-6 border-4 border-yellow-500 min-w-[350px] max-w-[400px]">
+                <p id="turn-label" class="text-yellow-400 text-lg font-black uppercase mb-2"></p>
+                <p class="text-emerald-200 text-xs uppercase font-black tracking-widest">Find this Animal's Home:</p>
+                <h2 id="target-landmark" class="text-3xl font-black text-white leading-tight mt-1">---</h2>
+                <img id="target-img" src="" alt="Animal Preview" style="display:none;">
+            </div>
+        </div>
+
+        <div class="hud top-1/2 left-4 -translate-y-1/2">
+            <button onclick="papaEncourage()" class="hud-content pulse-button p-5 flex flex-col items-center gap-3 border-yellow-400 border-4 bg-emerald-900">
+                <span class="text-6xl">👴</span>
+                <p class="text-yellow-400 font-black text-sm uppercase tracking-widest">Ask Papa!</p>
+            </button>
+        </div>
+
+        <svg id="map-svg"></svg>
+        <div id="tooltip"></div>
+    </div>
+
+    <script>
+        const players = ['Alani', 'Wilder'];
+        let currentPlayer = 'Alani';
+        let scores = { Alani: 0, Wilder: 0 };
+        let targetAnimal = null;
+        let preferredVoice = null;
+        let voiceReady = false;
+
+        const animals = [
+            { name: "Indian Elephant", location: "India", coords: [78.96, 20.59], fact: "In India, elephants are treated like royalty! They are very smart!", img: "https://images.unsplash.com/photo-1557008075-7f2c5efa4cfd?w=500&q=80" },
+            { name: "Iberian Lynx", location: "Portugal", coords: [-8.22, 39.39], fact: "The rarest cat in the world lives near Great Grandfather in Portugal!", img: "https://images.unsplash.com/photo-1591824438708-ce405f36ba3d?w=500&q=80" },
+            { name: "Kangaroo", location: "Australia", coords: [133.77, -25.27], fact: "Kangaroos use their big tails for balance while they hop!", img: "https://images.unsplash.com/photo-1549281899-f75600a24107?w=500&q=80" },
+            { name: "Giant Panda", location: "China", coords: [104.19, 35.86], fact: "Pandas spend 12 hours a day eating bamboo! Munch munch!", img: "https://images.unsplash.com/photo-1564349683136-77e08bef1ed1?w=500&q=80" },
+            { name: "Bald Eagle", location: "Florida, USA", coords: [-81.51, 28.37], fact: "You can see these majestic birds right here in Florida!", img: "https://images.unsplash.com/photo-1481016570479-9eab6349fde7?w=500&q=80" },
+            { name: "Lion", location: "Africa", coords: [20.0, -10.0], fact: "The King of the Jungle! Their roar can be heard 5 miles away!", img: "https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=500&q=80" },
+            { name: "Penguin", location: "Antarctica", coords: [0.0, -80.0], fact: "These birds can't fly, but they are world-class swimmers!", img: "https://images.unsplash.com/photo-1517783999520-f068d7431a60?w=500&q=80" }
+        ];
+
+        function initVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0 && !voiceReady) {
+                preferredVoice = voices.find(v => v.name.includes('Female') || v.name.includes('Google US English') || v.name.includes('Samantha'));
+                document.getElementById('loading-voice-text').innerText = "Safari animals are ready! Let's go!";
+                document.getElementById('start-btn').classList.remove('hidden');
+                voiceReady = true;
+            }
+        }
+        window.speechSynthesis.onvoiceschanged = initVoices;
+        setTimeout(initVoices, 500);
+
+        function speak(text, onEnd) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            if (preferredVoice) u.voice = preferredVoice;
+            u.pitch = 1.2; u.rate = 0.95;
+            let trig = false;
+            u.onend = () => { if(!trig) { trig = true; if(onEnd) onEnd(); }};
+            setTimeout(() => { if(!trig) { trig = true; if(onEnd) onEnd(); }}, text.length * 100);
+            window.speechSynthesis.speak(u);
+        }
+
+        const svg = d3.select("#map-svg");
+        const g = svg.append("g");
+        const projection = d3.geoNaturalEarth1().scale(window.innerWidth / 5.5).translate([window.innerWidth / 2, window.innerHeight / 1.7]);
+        const path = d3.geoPath().projection(projection);
+
+        svg.call(d3.zoom().scaleExtent([1, 15]).on("zoom", (e) => g.attr("transform", e.transform)));
+
+        d3.json("https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson").then(data => {
+            g.selectAll("path").data(data.features).enter().append("path").attr("d", path).attr("class", "country-path");
+            drawAnimals();
+        });
+
+        svg.on("mousemove", function(event) {
+            if (!targetAnimal) return;
+            const [mx, my] = d3.pointer(event, g.node());
+            const [tx, ty] = projection(targetAnimal.coords);
+            const dist = Math.sqrt((mx - tx)**2 + (my - ty)**2);
+            const intensity = Math.max(0, 10 - (dist / 100));
+            const container = document.getElementById("game-container");
+            container.style.borderWidth = (intensity * 2) + "px";
+            container.style.boxShadow = `inset 0 0 ${intensity * 20}px #fbbf24`;
+        });
+
+        function drawAnimals() {
+            g.selectAll(".landmark-point").data(animals).enter().append("circle")
+                .attr("class", "landmark-point")
+                .attr("cx", d => projection(d.coords)[0])
+                .attr("cy", d => projection(d.coords)[1])
+                .attr("r", 12)
+                .on("mouseover", function(event, d) {
+                    d3.select("#tooltip").style("opacity", 1).html("???").style("left", (event.pageX + 15) + "px").style("top", (event.pageY - 20) + "px");
+                })
+                .on("mouseout", () => d3.select("#tooltip").style("opacity", 0))
+                .on("click", (e, d) => handleAnimalClick(d));
+        }
+
+        document.getElementById('start-btn').onclick = () => {
+            document.getElementById('start-screen').classList.add('hidden');
+            speak("Welcome to Animal Safari! Alani and Wilder, find the animal homes! Alani first!", nextRound);
+        };
+
+        function nextRound() {
+            if (scores.Alani >= 1000 || scores.Wilder >= 1000) { endGame(); return; }
+            targetAnimal = animals[Math.floor(Math.random() * animals.length)];
+            const img = document.getElementById('target-img');
+            img.src = targetAnimal.img;
+            img.style.display = "block";
+            document.getElementById('target-landmark').innerText = targetAnimal.name;
+            document.getElementById('turn-label').innerText = currentPlayer + "'s Turn";
+            document.getElementById('box-Alani').style.opacity = (currentPlayer === 'Alani' ? "1" : "0.3");
+            document.getElementById('box-Wilder').style.opacity = (currentPlayer === 'Wilder' ? "1" : "0.3");
+            speak(currentPlayer + ", find where the " + targetAnimal.name + " lives!");
+        }
+
+        function handleAnimalClick(d) {
+            if (d.name === targetAnimal.name) {
+                scores[currentPlayer] += 200;
+                document.getElementById('score-' + currentPlayer).innerText = scores[currentPlayer];
+                speak("Bingo! " + d.fact, () => {
+                    currentPlayer = (currentPlayer === 'Alani' ? 'Wilder' : 'Alani');
+                    speak("Now it's " + currentPlayer + "'s turn", nextRound);
+                });
+            } else {
+                speak("Missed turn! That was the " + d.name, () => {
+                    currentPlayer = (currentPlayer === 'Alani' ? 'Wilder' : 'Alani');
+                    speak("Now it's " + currentPlayer + "'s turn", nextRound);
+                });
+            }
+        }
+
+        function papaEncourage() {
+            speak("Papa Pooh says: Use the yellow border glow! It's brightest when you're right over the animal's home!");
+        }
+
+        function endGame() {
+            const winner = (scores.Alani >= 1000 ? 'Alani' : 'Wilder');
+            document.getElementById('winner-text').innerText = winner + " Wins!";
+            document.getElementById('winner-screen').classList.remove('hidden');
+            speak("Hooray! Congratulations " + winner + "! You are the Safari King!");
+        }
+    </script>
+</body>
+</html>
